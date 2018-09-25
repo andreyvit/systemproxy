@@ -9,6 +9,9 @@ const (
 	keyProxyServer = "ProxyServer"
 )
 
+/*
+Get returns the current systemwide proxy settings.
+*/
 func Get() (Settings, error) {
 	var s Settings
 
@@ -24,7 +27,7 @@ func Get() (Settings, error) {
 	}
 	s.Enabled = (en != 0)
 
-	s.Server, _, err = k.GetStringValue(keyProxyServer)
+	s.DefaultServer, _, err = k.GetStringValue(keyProxyServer)
 	if err != nil && err != registry.ErrNotExist {
 		return s, proxyErr{err}
 	}
@@ -32,6 +35,9 @@ func Get() (Settings, error) {
 	return s, nil
 }
 
+/*
+Set updates systemwide proxy settings.
+*/
 func Set(s Settings) error {
 	k, err := registry.OpenKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Internet Settings`, registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
@@ -48,11 +54,9 @@ func Set(s Settings) error {
 		return proxyErr{err}
 	}
 
-	if s.Server != "" {
-		err = k.SetStringValue(keyProxyServer, s.Server)
-		if err != nil {
-			return proxyErr{err}
-		}
+	err = k.SetStringValue(keyProxyServer, s.DefaultServer)
+	if err != nil {
+		return proxyErr{err}
 	}
 
 	return nil
